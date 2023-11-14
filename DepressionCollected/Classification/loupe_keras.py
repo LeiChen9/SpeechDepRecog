@@ -132,7 +132,7 @@ class NetVLAD(layers.Layer):
         activation = tf.reshape(activation,
                 [-1, self.max_samples, self.cluster_size])
 
-        a_sum = tf.reduce_sum(activation,-2,keep_dims=True)
+        a_sum = tf.reduce_sum(activation,-2,keepdims=True)
         
         a = tf.multiply(a_sum,self.cluster_weights2)
         
@@ -382,7 +382,7 @@ class NetFV(layers.Layer):
         activation = tf.reshape(activation,
                 [-1, self.max_samples, self.cluster_size])
 
-        a_sum = tf.reduce_sum(activation,-2,keep_dims=True)
+        a_sum = tf.reduce_sum(activation,-2,keepdims=True)
         
         a = tf.multiply(a_sum,self.cluster_weights2)
         

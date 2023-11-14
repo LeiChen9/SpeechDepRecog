@@ -15,7 +15,8 @@ import pickle
 import random
 import itertools
 
-prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
+# prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
+prefix = '/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/'
 audio_features = np.squeeze(np.load(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_256.npz'))['arr_0'], axis=2)
 audio_targets = np.load(os.path.join(prefix, 'Features/AudioWhole/whole_labels_clf_256.npz'))['arr_0']
 audio_dep_idxs_tmp = np.where(audio_targets == 1)[0]

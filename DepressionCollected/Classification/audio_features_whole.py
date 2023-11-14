@@ -11,6 +11,7 @@ sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/Cla
 # import tensorflow.compat.v1 as tf
 import tensorflow._api.v2.compat.v1 as tf
 
+sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/models/research/audioset/')
 sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/models/research/audioset/vggish')
 import vggish.vggish_input as vggish_input
 import vggish.vggish_params as vggish_params
@@ -60,7 +61,8 @@ def to_vggish_embedds(x, sr):
 def wav2vlad(wave_data, sr):
     global cluster_size
     signal = wave_data
-    melspec = librosa.feature.melspectrogram(signal, n_mels=80,sr=sr).astype(np.float32).T
+    # melspec = librosa.feature.melspectrogram(signal, n_mels=80,sr=sr).astype(np.float32).T
+    melspec = librosa.feature.melspectrogram(y=signal, sr=sr).astype(np.float32).T
     melspec = np.log(np.maximum(1e-6, melspec))
     feature_size = melspec.shape[1]
     max_samples = melspec.shape[0]
@@ -78,22 +80,22 @@ def extract_features(number, audio_features, targets, path):
     global max_len, min_len
     if not os.path.exists(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path))):
         return    
-    positive_file = wave.open(os.path.join(prefix, '{1}/{0}/positive_out.wav'.format(number, path)))
+    positive_file = wave.open(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path)))
     sr1 = positive_file.getframerate()
     nframes1 = positive_file.getnframes()
-    wave_data1 = np.frombuffer(positive_file.readframes(nframes1), dtype=np.short).astype(np.float)
+    wave_data1 = np.frombuffer(positive_file.readframes(nframes1), dtype=np.short).astype(float)
     len1 = nframes1 / sr1
 
-    neutral_file = wave.open(os.path.join(prefix, '{1}/{0}/neutral_out.wav'.format(number, path)))
+    neutral_file = wave.open(os.path.join(prefix, '{1}_{0}/neutral_out.wav'.format(number, path)))
     sr2 = neutral_file.getframerate()
     nframes2 = neutral_file.getnframes()
-    wave_data2 = np.frombuffer(neutral_file.readframes(nframes2), dtype=np.short).astype(np.float)
+    wave_data2 = np.frombuffer(neutral_file.readframes(nframes2), dtype=np.short).astype(float)
     len2 = nframes2 / sr2
 
-    negative_file = wave.open(os.path.join(prefix, '{1}/{0}/negative_out.wav'.format(number, path)))
+    negative_file = wave.open(os.path.join(prefix, '{1}_{0}/negative_out.wav'.format(number, path)))
     sr3 = negative_file.getframerate()
     nframes3 = negative_file.getnframes()
-    wave_data3 = np.frombuffer(negative_file.readframes(nframes3), dtype=np.short).astype(np.float)
+    wave_data3 = np.frombuffer(negative_file.readframes(nframes3), dtype=np.short).astype(float)
     len3 = nframes3/sr3
 
     for l in [len1, len2, len3]:
@@ -128,7 +130,7 @@ for index in range(114):
 
 
 print("Saving npz file locally...")
-np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_samples_reg_%d.npz'%(cluster_size*16)), audio_features)
-np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_labels_reg_%d.npz')%(cluster_size*16), audio_targets)
+np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_%d.npz'%(cluster_size*16)), audio_features)
+np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_labels_clf_%d.npz')%(cluster_size*16), audio_targets)
 
 print(max_len, min_len)
