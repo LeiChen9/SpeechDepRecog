@@ -77,13 +77,17 @@ def wav2vlad(wave_data, sr):
         r = feat.numpy()
     return r
         
+# Core method
 def extract_features(number, audio_features, targets, path):
     global max_len, min_len
+    # *_out.wav format file is needed
     if not os.path.exists(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path))):
         return    
     positive_file = wave.open(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path)))
+    # get frame rate and nframes
     sr1 = positive_file.getframerate()
     nframes1 = positive_file.getnframes()
+    # load wav file via np
     wave_data1 = np.frombuffer(positive_file.readframes(nframes1), dtype=np.short).astype(float)
     len1 = nframes1 / sr1
 
@@ -118,6 +122,7 @@ def extract_features(number, audio_features, targets, path):
         wav2vlad(wave_data3, sr3)])
     # targets.append(1 if target >= 53 else 0)
     targets.append(target)
+    pdb.set_trace()
 
 
 if __name__ == '__main__':
@@ -129,6 +134,8 @@ if __name__ == '__main__':
 
     for index in range(114):
         extract_features(index+1, audio_features, audio_targets, 'v')
+
+    pdb.set_trace()
 
     print("Saving npz file locally...")
     np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_%d.npz'%(cluster_size*16)), audio_features)
