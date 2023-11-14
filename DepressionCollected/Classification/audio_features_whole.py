@@ -6,10 +6,12 @@ import librosa
 from python_speech_features import *
 import sys
 import pickle
-sys.path.append('/Users/linlin/Desktop/depression/classfication')
+sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/Classfication')
 
-import tensorflow.compat.v1 as tf
+# import tensorflow.compat.v1 as tf
+import tensorflow._api.v2.compat.v1 as tf
 
+sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/models/research/audioset/vggish')
 import vggish.vggish_input as vggish_input
 import vggish.vggish_params as vggish_params
 import vggish.vggish_postprocess as vggish_postprocess
@@ -17,15 +19,16 @@ import vggish.vggish_slim as vggish_slim
 
 import loupe_keras as lpk
 
-from allennlp.commands.elmo import ElmoEmbedder
+# from allennlp.commands.elmo import ElmoEmbedder
 
 tf.enable_eager_execution()
 
-elmo = ElmoEmbedder()
+# elmo = ElmoEmbedder()
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
+# prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
+prefix = '/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/'
 
 # Paths to downloaded VGGish files.
 checkpoint_path =os.path.join(os.getcwd(),  'vggish/vggish_model.ckpt')
@@ -73,7 +76,7 @@ def wav2vlad(wave_data, sr):
         
 def extract_features(number, audio_features, targets, path):
     global max_len, min_len
-    if not os.path.exists(os.path.join(prefix, '{1}/{0}/positive_out.wav'.format(number, path))):
+    if not os.path.exists(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path))):
         return    
     positive_file = wave.open(os.path.join(prefix, '{1}/{0}/positive_out.wav'.format(number, path)))
     sr1 = positive_file.getframerate()
@@ -99,7 +102,7 @@ def extract_features(number, audio_features, targets, path):
         if l < min_len:
             min_len = l
 
-    with open(os.path.join(prefix, '{1}/{0}/new_label.txt'.format(number, path))) as fli:
+    with open(os.path.join(prefix, '{1}_{0}/new_label.txt'.format(number, path))) as fli:
         target = float(fli.readline())
     
     if wave_data1.shape[0] < 1:
@@ -118,10 +121,10 @@ audio_features = []
 audio_targets = []
 
 for index in range(114):
-    extract_features(index+1, audio_features, audio_targets, 'Data')
+    extract_features(index+1, audio_features, audio_targets, 't')
 
 for index in range(114):
-    extract_features(index+1, audio_features, audio_targets, 'ValidationData')
+    extract_features(index+1, audio_features, audio_targets, 'v')
 
 
 print("Saving npz file locally...")
