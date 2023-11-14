@@ -10,6 +10,7 @@ sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/Cla
 
 # import tensorflow.compat.v1 as tf
 import tensorflow._api.v2.compat.v1 as tf
+import pdb
 
 sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/models/research/audioset/')
 sys.path.append('/Users/lei/Documents/Projs/Yoda/SpeechM/DepressionCollected/models/research/audioset/vggish')
@@ -127,6 +128,8 @@ for index in range(114):
 
 for index in range(114):
     extract_features(index+1, audio_features, audio_targets, 'v')
+
+pdb.set_trace()
 
 
 print("Saving npz file locally...")
