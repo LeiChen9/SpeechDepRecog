@@ -120,20 +120,18 @@ def extract_features(number, audio_features, targets, path):
     targets.append(target)
 
 
-audio_features = []
-audio_targets = []
+if __name__ == '__main__':
+    audio_features = []
+    audio_targets = []
 
-for index in range(114):
-    extract_features(index+1, audio_features, audio_targets, 't')
+    for index in range(114):
+        extract_features(index+1, audio_features, audio_targets, 't')
 
-for index in range(114):
-    extract_features(index+1, audio_features, audio_targets, 'v')
+    for index in range(114):
+        extract_features(index+1, audio_features, audio_targets, 'v')
 
-pdb.set_trace()
+    print("Saving npz file locally...")
+    np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_%d.npz'%(cluster_size*16)), audio_features)
+    np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_labels_clf_%d.npz')%(cluster_size*16), audio_targets)
 
-
-print("Saving npz file locally...")
-np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_%d.npz'%(cluster_size*16)), audio_features)
-np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_labels_clf_%d.npz')%(cluster_size*16), audio_targets)
-
-print(max_len, min_len)
+    print(max_len, min_len)
