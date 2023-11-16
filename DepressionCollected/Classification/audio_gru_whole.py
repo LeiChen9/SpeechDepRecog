@@ -15,6 +15,9 @@ import pickle
 import random
 import itertools
 
+from torch.utils.tensorboard import SummaryWriter 
+import pdb
+
 # prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
 prefix = '/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/'
 audio_features = np.squeeze(np.load(os.path.join(prefix, 'Features/AudioWhole/whole_samples_clf_256.npz'))['arr_0'], axis=2)
@@ -256,65 +259,72 @@ def get_param_group(model):
     return [{'params': param_list, 'weight_decay': 1e-5}, {'params': nd_list, 'weight_decay': 0}]
 
 if __name__ == '__main__':
+    '''
     # kf = KFold(n_splits=3, shuffle=True)
     # fold = 1
     # for train_idxs_tmp, test_idxs_tmp in kf.split(audio_features):
-    train_idxs_tmps = [np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.63_1.npy'), allow_pickle=True),
-    np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.60_2.npy'), allow_pickle=True),
-    np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.60_3.npy'), allow_pickle=True)]
-    for idx_idx, train_idxs_tmp in enumerate(train_idxs_tmps):
-        fold = idx_idx + 1
-        # if idx_idx != 1:
-        #     continue
-        test_idxs_tmp = list(set(list(audio_dep_idxs_tmp)+list(audio_non_idxs)) - set(train_idxs_tmp))
-        train_idxs, test_idxs = [], []
-        resample_idxs = [0,1,2,3,4,5]
-        # depression data augmentation
-        for idx in train_idxs_tmp:
-            if idx in audio_dep_idxs_tmp:
-                feat = audio_features[idx]
-                count = 0
-                for i in itertools.permutations(feat, feat.shape[0]):
-                    if count in resample_idxs:
-                        audio_features = np.vstack((audio_features, np.expand_dims(list(i), 0)))
-                        audio_targets = np.hstack((audio_targets, 1))
-                        train_idxs.append(len(audio_features)-1)
-                    count += 1
-            else:
-                train_idxs.append(idx)
+    # train_idxs_tmps = [np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.63_1.npy'), allow_pickle=True),
+    # np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.60_2.npy'), allow_pickle=True),
+    # np.load(os.path.join(prefix, 'Features/TextWhole/train_idxs_0.60_3.npy'), allow_pickle=True)]
+    # for idx_idx, train_idxs_tmp in enumerate(train_idxs_tmps):
+    #     fold = idx_idx + 1
+    #     # if idx_idx != 1:
+    #     #     continue
+    #     test_idxs_tmp = list(set(list(audio_dep_idxs_tmp)+list(audio_non_idxs)) - set(train_idxs_tmp))
+    #     train_idxs, test_idxs = [], []
+    #     resample_idxs = [0,1,2,3,4,5]
+    #     # depression data augmentation
+    #     for idx in train_idxs_tmp:
+    #         if idx in audio_dep_idxs_tmp:
+    #             feat = audio_features[idx]
+    #             count = 0
+    #             for i in itertools.permutations(feat, feat.shape[0]):
+    #                 if count in resample_idxs:
+    #                     audio_features = np.vstack((audio_features, np.expand_dims(list(i), 0)))
+    #                     audio_targets = np.hstack((audio_targets, 1))
+    #                     train_idxs.append(len(audio_features)-1)
+    #                 count += 1
+    #         else:
+    #             train_idxs.append(idx)
 
-        for idx in test_idxs_tmp:
-            if idx in audio_dep_idxs_tmp:
-                feat = audio_features[idx]
-                count = 0
-                # resample_idxs = random.sample(range(6), 4)
-                resample_idxs = [0,1,4,5]
-                for i in itertools.permutations(feat, feat.shape[0]):
-                    if count in resample_idxs:
-                        audio_features = np.vstack((audio_features, np.expand_dims(list(i), 0)))
-                        audio_targets = np.hstack((audio_targets, 1))
-                        test_idxs.append(len(audio_features)-1)
-                    count += 1
-            else:
-                test_idxs.append(idx)
-            # test_idxs.append(idx)
+    #     for idx in test_idxs_tmp:
+    #         if idx in audio_dep_idxs_tmp:
+    #             feat = audio_features[idx]
+    #             count = 0
+    #             # resample_idxs = random.sample(range(6), 4)
+    #             resample_idxs = [0,1,4,5]
+    #             for i in itertools.permutations(feat, feat.shape[0]):
+    #                 if count in resample_idxs:
+    #                     audio_features = np.vstack((audio_features, np.expand_dims(list(i), 0)))
+    #                     audio_targets = np.hstack((audio_targets, 1))
+    #                     test_idxs.append(len(audio_features)-1)
+    #                 count += 1
+    #         else:
+    #             test_idxs.append(idx)
+    #         # test_idxs.append(idx)
 
-        model = AudioBiLSTM(config)
+    #     model = AudioBiLSTM(config)
 
-        if config['cuda']:
-            model = model.cuda()
+    #     if config['cuda']:
+    #         model = model.cuda()
 
-        param_group = get_param_group(model)
-        optimizer = optim.AdamW(param_group, lr=config['learning_rate'])
-        criterion = nn.CrossEntropyLoss()
-        # criterion = FocalLoss(class_num=2)
-        max_f1 = -1
-        max_acc = -1
-        max_rec = -1
-        max_prec = -1
-        train_acc = -1
+    #     param_group = get_param_group(model)
+    #     optimizer = optim.AdamW(param_group, lr=config['learning_rate'])
+    #     criterion = nn.CrossEntropyLoss()
+    #     # criterion = FocalLoss(class_num=2)
+    #     max_f1 = -1
+    #     max_acc = -1
+    #     max_rec = -1
+    #     max_prec = -1
+    #     train_acc = -1
 
-        for ep in range(1, config['epochs']):
-            train(ep, train_idxs)
-            tloss = evaluate(model, test_idxs, fold, train_idxs_tmp, train_idxs)
-        fold += 1
+    #     for ep in range(1, config['epochs']):
+    #         train(ep, train_idxs)
+    #         tloss = evaluate(model, test_idxs, fold, train_idxs_tmp, train_idxs)
+    #     fold += 1
+    '''
+    batch_size = 100
+    writer = SummaryWriter("./log")
+    pdb.set_trace()
+    # load data
+    
