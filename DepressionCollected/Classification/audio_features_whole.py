@@ -78,7 +78,9 @@ def wav2vlad(wave_data, sr):
     return r
         
 # Core method
-def extract_features(number, audio_features, targets, path):
+def extract_features(number, path):
+    audio_features = []
+    targets = []
     global max_len, min_len
     # *_out.wav format file is needed
     if not os.path.exists(os.path.join(prefix, '{1}_{0}/positive_out.wav'.format(number, path))):
@@ -122,7 +124,7 @@ def extract_features(number, audio_features, targets, path):
         wav2vlad(wave_data3, sr3)])
     # targets.append(1 if target >= 53 else 0)
     targets.append(target)
-    pdb.set_trace()
+    return audio_features, targets
 
 
 if __name__ == '__main__':
@@ -142,3 +144,10 @@ if __name__ == '__main__':
     np.savez(os.path.join(prefix, 'Features/AudioWhole/whole_labels_clf_%d.npz')%(cluster_size*16), audio_targets)
 
     print(max_len, min_len)
+
+    train_x, train_y, test_x, test_y = [], [], [], []
+
+    for idx in range(114):
+        train_x, train_y = extract_features(idx + 1, 't')
+    for idx in range(114):
+        test_x, test_y = extract_features(idx + 1, 'v')

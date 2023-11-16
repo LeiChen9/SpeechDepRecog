@@ -7,16 +7,18 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
-
+from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 import pandas as pd
 import os
 import pickle
 import random
 import itertools
+from tqdm import tqdm
 
 from torch.utils.tensorboard import SummaryWriter 
 import pdb
+from audio_features_whole import *
 
 # prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
 prefix = '/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/'
@@ -39,8 +41,8 @@ class AudioBiLSTM(nn.Module):
         self.build_model()
         # self.init_weight()
 
-    def init_weight(net):
-        for name, param in net.named_parameters():
+    def init_weight(self):
+        for name, param in self.named_parameters():
             if not 'ln' in name:
                 if 'bias' in name:
                     nn.init.constant_(param, 0.0)
@@ -258,6 +260,8 @@ def get_param_group(model):
             param_list.append(param)
     return [{'params': param_list, 'weight_decay': 1e-5}, {'params': nd_list, 'weight_decay': 0}]
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 if __name__ == '__main__':
     '''
     # kf = KFold(n_splits=3, shuffle=True)
@@ -323,8 +327,80 @@ if __name__ == '__main__':
     #         tloss = evaluate(model, test_idxs, fold, train_idxs_tmp, train_idxs)
     #     fold += 1
     '''
-    batch_size = 100
+    # batch_size = 100
+    train_x, train_y, test_x, test_y = [], [], [], []
+    for idx in range(114):
+        try:
+            curr_train_x, curr_train_y = extract_features(idx + 1, 't')
+        except:
+            continue
+        train_x.append(curr_train_x)
+        train_y.append([1 if curr_train_y[0] > 53 else 0])
+    for idx in range(114):
+        try:
+            curr_test_x, curr_test_y = extract_features(idx + 1, 'v')
+        except:
+            continue
+        test_x.append(curr_test_x)
+        test_y.append([1 if curr_test_y[0] > 53 else 0])
+    len_train, len_test = len(train_x), len(test_x)
+    train_x = np.array(train_x).reshape(len_train, -1, 256)
+    train_y = np.array(train_y).reshape(len_train)
+    test_x = np.array(test_x).reshape(len_test, -1, 256)
+    test_y = np.array(test_y).reshape(len_test)
+    train_data = TensorDataset(torch.from_numpy(train_x).float(), torch.from_numpy(train_y).long())
+    test_data = TensorDataset(torch.from_numpy(test_x).float(), torch.from_numpy(test_y).long())
+    train_loader = DataLoader(train_data, shuffle=True)
+    test_loader = DataLoader(test_data, shuffle=True)
     writer = SummaryWriter("./log")
-    pdb.set_trace()
-    # load data
+    # pdb.set_trace()
+    model = AudioBiLSTM(config=config)
+    model.to(device)
+    loss_function = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    epochs = 50
+    counter = 0
+    epoch_loss = 0
+    model.init_weight()
+    for i in range(epochs):
+        epoch_loss = 0
+        train_y_out = []
+        for inputs, labels in tqdm(train_loader):
+            inputs, labels = inputs.to(device), labels.to(device)
+            model.zero_grad()
+
+            output = model(inputs)
+            train_y_out.append(output)
+
+            loss = loss_function(output, labels)
+            epoch_loss += loss.item()
+
+            loss.backward()
+
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
+
+            optimizer.step()
+        
+        pdb.set_trace()
+        conf_matrix = standard_confusion_matrix(train_y, np.array(train_y_out))
+        print("Confusion Matrix:")
+        print(conf_matrix)
     
+        writer.add_scalar('epoch_train_loss', epoch_loss, global_step=i)
+
+        test_total_loss = 0
+        for inputs, labels in test_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            output = model(inputs)
+            test_loss = loss_function(output, labels)
+            test_total_loss += test_loss.item() 
+        # Print test process info 
+        writer.add_scalar('epoch_test_loss', test_total_loss, global_step=i)        
+
+        print("Epoch: {}/{}...".format(i + 1, epochs),
+            "Step: {}...".format(counter),
+            "Loss: {:.6f}...".format(loss.item()))
+        
+        writer.close()
+        

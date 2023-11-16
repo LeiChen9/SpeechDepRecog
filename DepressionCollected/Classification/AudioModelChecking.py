@@ -39,6 +39,7 @@ class BiLSTM(nn.Module):
         # x = self.bn(x)
         x = x.sum(dim=1)
         out = self.fc_audio(x)
+        out = out[:, -1]
         return out
 
 # prefix = os.path.abspath(os.path.join(os.getcwd(), "."))
