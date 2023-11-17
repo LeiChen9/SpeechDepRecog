@@ -24,8 +24,8 @@ def get_wav_duration(file_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_list", type=str, default="./filelists/train.txt", help="path to train list")
-    parser.add_argument("--val_list", type=str, default="./filelists/val.txt", help="path to val list")
+    parser.add_argument("--train_list", type=str, default="./configs/train.txt", help="path to train list")
+    parser.add_argument("--val_list", type=str, default="./configs/val.txt", help="path to val list")
     parser.add_argument("--source_dir", type=str, default="/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/", help="path to source dir")
     parser.add_argument("--speech_encoder", type=str, default="vec768l12", help="choice a speech encoder|'vec768l12','vec256l9','hubertsoft','whisper-ppg','cnhubertlarge','dphubert','whisper-ppg-large','wavlmbase+'")
     parser.add_argument("--vol_aug", action="store_true", help="Whether to use volume embedding and volume augmentation")
@@ -40,6 +40,8 @@ if __name__ == "__main__":
     # spk_id = 0
 
     for speaker in tqdm(os.listdir(args.source_dir)):
+        if speaker.startswith('.'):
+            continue
         spk_id = speaker
         spk_dict[speaker] = speaker
         # spk_id += 1
@@ -66,11 +68,10 @@ if __name__ == "__main__":
             wavs.append(file_path)
 
         # shuffle(wavs)
-        pdb.set_trace()
         if speaker[0] == 't':
-            train += wavs[2:]
+            train += wavs
         else:
-            val += wavs[:2]
+            val += wavs
 
     # shuffle(train)
     # shuffle(val)

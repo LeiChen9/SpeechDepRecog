@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 import torch.utils.data
-
+import pdb
 import utils
 from modules.mel_processing import spectrogram_torch
 from utils import load_filepaths_and_text, load_wav_to_torch
@@ -58,7 +58,6 @@ class TextAudioLoader(torch.utils.data.Dataset):
                                      center=False)
             spec = torch.squeeze(spec, 0)
             torch.save(spec, spec_filename)
-
         spk = filename.split("/")[-2]
         spk = torch.LongTensor([self.spk_map[spk]])
 
