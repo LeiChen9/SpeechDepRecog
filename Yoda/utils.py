@@ -14,6 +14,50 @@ def load_filepaths_and_text(filename, split="|"):
     filepaths_and_text = [line.strip().split(split) for line in f]
   return filepaths_and_text
 
+def get_speech_encoder(speech_encoder,device=None,**kargs):
+    if speech_encoder == "vec768l12":
+        from vencoder.ContentVec768L12 import ContentVec768L12
+        speech_encoder_object = ContentVec768L12(device = device)
+    elif speech_encoder == "vec256l9":
+        from vencoder.ContentVec256L9 import ContentVec256L9
+        speech_encoder_object = ContentVec256L9(device = device)
+    elif speech_encoder == "vec256l9-onnx":
+        from vencoder.ContentVec256L9_Onnx import ContentVec256L9_Onnx
+        speech_encoder_object = ContentVec256L9_Onnx(device = device)
+    elif speech_encoder == "vec256l12-onnx":
+        from vencoder.ContentVec256L12_Onnx import ContentVec256L12_Onnx
+        speech_encoder_object = ContentVec256L12_Onnx(device = device)
+    elif speech_encoder == "vec768l9-onnx":
+        from vencoder.ContentVec768L9_Onnx import ContentVec768L9_Onnx
+        speech_encoder_object = ContentVec768L9_Onnx(device = device)
+    elif speech_encoder == "vec768l12-onnx":
+        from vencoder.ContentVec768L12_Onnx import ContentVec768L12_Onnx
+        speech_encoder_object = ContentVec768L12_Onnx(device = device)
+    elif speech_encoder == "hubertsoft-onnx":
+        from vencoder.HubertSoft_Onnx import HubertSoft_Onnx
+        speech_encoder_object = HubertSoft_Onnx(device = device)
+    elif speech_encoder == "hubertsoft":
+        from vencoder.HubertSoft import HubertSoft
+        speech_encoder_object = HubertSoft(device = device)
+    elif speech_encoder == "whisper-ppg":
+        from vencoder.WhisperPPG import WhisperPPG
+        speech_encoder_object = WhisperPPG(device = device)
+    elif speech_encoder == "cnhubertlarge":
+        from vencoder.CNHubertLarge import CNHubertLarge
+        speech_encoder_object = CNHubertLarge(device = device)
+    elif speech_encoder == "dphubert":
+        from vencoder.DPHubert import DPHubert
+        speech_encoder_object = DPHubert(device = device)
+    elif speech_encoder == "whisper-ppg-large":
+        from vencoder.WhisperPPGLarge import WhisperPPGLarge
+        speech_encoder_object = WhisperPPGLarge(device = device)
+    elif speech_encoder == "wavlmbase+":
+        from vencoder.WavLMBasePlus import WavLMBasePlus
+        speech_encoder_object = WavLMBasePlus(device = device)
+    else:
+        raise Exception("Unknown speech encoder")
+    return speech_encoder_object 
+
 def get_hparams(init=True):
     parser = argparse.ArgumentParser()
     # can parse config file and model from arguments
@@ -43,6 +87,13 @@ def get_hparams(init=True):
     hparams = HParams(**config)
     hparams.model_dir = model_dir
     return hparams
+
+def get_hparams_from_file(config_path, infer_mode = False):
+  with open(config_path, "r") as f:
+    data = f.read()
+  config = json.loads(data)
+  hparams =HParams(**config) if not infer_mode else InferHParams(**config)
+  return hparams
 
 class HParams():
   def __init__(self, **kwargs):
@@ -77,3 +128,13 @@ class HParams():
 
   def get(self,index):
     return self.__dict__.get(index)
+  
+class InferHParams(HParams):
+  def __init__(self, **kwargs):
+    for k, v in kwargs.items():
+      if type(v) == dict:
+        v = InferHParams(**v)
+      self[k] = v
+
+  def __getattr__(self,index):
+    return self.get(index)
