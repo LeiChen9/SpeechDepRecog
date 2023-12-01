@@ -9,6 +9,7 @@ from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from modelscope.pipelines import pipeline as mc_pipeline
 from modelscope.preprocessors import Preprocessor
 from modelscope.utils.constant import Tasks
+from funasr import infer
 import modelscope
 import pdb
 
@@ -86,12 +87,39 @@ def text_feature_extract(text):
     num_words = len(word_list)
     pdb.set_trace()
 
+def funasr_api(file_name):
+    '''
+    Triggered funasr api, which is implemented by Ali-Damo, git repo: https://github.com/alibaba/FunASR.git 
+    Params:
+        file_name: absoulte path of audio file to be processed, must in "wav" format
+    Return:
+        type of dict
+            - key: the index, which is the relative file_name (get rid of prefix)
+            - value: transcripted text
+            - text_postprocessed: text which is splitted
+            - time_stamp: every word start time and end time, list of 2-element list.
+            - sentences: list of every sentence
+                - text: this sentence 
+                - start: start time
+                - end: end time
+                - text_seg: text segement joined by " "
+                - ts_list: time_stamp list
+            - embeddings: every sentence embedding
+    '''
+    api = infer(model="paraformer-zh", vad_model="fsmn-vad", punc_model="ct-punc", model_hub="ms")
+
+    results = api(file_name, batch_size_token=5000)
+    result = results[0] # type of dict, with key, value, text_postprocessed, time_stamp, sentences, embeddings
+    pdb.set_trace()
+
+
 if __name__ == '__main__':
     file_name = "/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/t_1/positive_out.wav"
     #
     # audio_feature_extract(file_name)
     # curr_txt = whisper2text(file_name)
     # curr_txt = scope2text(file_name)
-    wav2vec(file_name)
+    # wav2vec(file_name)
+    res = funasr_api(file_name=file_name)
     pdb.set_trace()
     text_feature_extract(curr_txt)
