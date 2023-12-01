@@ -4,8 +4,8 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]
 config_path = CURRENT_DIR.rsplit('/', 2)[0] # upper 2 level dir
 sys.path.append(config_path)
 
-from LLMs.pyAudioAnalysis import audioBasicIO
-from LLMs.pyAudioAnalysis import ShortTermFeatures, audioVisualization
+from LLMs.pyAudioAnalysis.pyAudioAnalysis import audioBasicIO
+from LLMs.pyAudioAnalysis.pyAudioAnalysis import ShortTermFeatures, audioVisualization
 import matplotlib.pyplot as plt
 import torch
 # from pyhanlp import *
@@ -19,40 +19,55 @@ from funasr import infer
 import modelscope
 import pdb
 
-def audio_feature_extract(file_name):
+def audio_feature_extract(file_name: str) -> dict:
+    '''
+    Extract acoustic feature from audio file, implemented by a Greece researcher, git repo: https://github.com/tyiannak/pyAudioAnalysis.git
+    Params:
+        file_name: absoulte path of audio file to be processed, must in "wav" format
+    Return:
+        type of tuple of (feat_dict, feature matrix, feature names)
+        dict:
+            - key: feature name
+            - value: numeric representation of feature
+        feeature matrix: 68 * 740
+        feature names: list of len 68
+    '''
     [Fs, x] = audioBasicIO.read_audio_file(file_name)
     # convert dual channel to mono
     x = x.mean(axis=1)
-    # pdb.set_trace()
     F, f_names = ShortTermFeatures.feature_extraction(x, Fs, 0.050*Fs, 0.025*Fs)
+    
+    audio_dict = {}
+    for i in range(len(f_names)):
+        audio_dict[f_names[i]] = F[i].reshape(-1)
+    return audio_dict, F, f_names
+
+def audio_visual(F, f_names) -> None:
     plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[0]) 
-    plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[1]); plt.show()
-    return F, f_names
+    plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[1])
+    plt.show()
 
-def audio_visual(file_name):
-    pass
+def text_feature_extract(funasr_dict):
+    '''
+    Text statistical feature extraction base on funasr result 
+    Params:
+        funasr_dict: @funasr_api 
+    Return:
+        type of dict
+        - key: feature name
+        - value: feature number
+    '''
+    text = funasr_dict['value']
+    word_list = [x for x in jieba.cut(text)]
+    char_list = funasr_dict['text_postprocessed'].split(" ")
+    num_words, num_chars = len(word_list), len(char_list)
+    res_dict = {
+        "num_of_words": num_words,
+        "num_chars": num_chars
+    }
+    return res_dict
 
-def scope2text(file_name):
-    model_id = 'damo/speech_paraformer_asr_nat-zh-cn-16k-common-vocab8358-tensorflow1'
-    processor = Preprocessor.from_pretrained(model_id)
-    inference_pipeline = mc_pipeline(
-        task=Tasks.auto_speech_recognition,
-        model=model_id)
-    # embed = get_embedding(model, file_name)
-    rec_result = inference_pipeline(audio_in=file_name)
-    print(rec_result)
-    pdb.set_trace()
-
-def text_feature_extract(text):
-    text = text['text']
-    text = ''.join([x for x in text if x != ' '])
-    words = jieba.cut(text)
-    num_charaters = len(text)
-    word_list = '/'.join(words).split('/')
-    num_words = len(word_list)
-    pdb.set_trace()
-
-def funasr_api(file_name):
+def funasr_api(file_name: str) -> dict:
     '''
     Trigger funasr api, work for Speech2Text, implemented by Ali-Damo, git repo: https://github.com/alibaba/FunASR.git 
     Params:
@@ -80,10 +95,11 @@ def funasr_api(file_name):
 
 if __name__ == '__main__':
     file_name = "/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/t_1/positive_out.wav"
-    # get funasr feature
-    # funasr_dict = funasr_api(file_name=file_name)
-    # get audio feature
-    F, f_names = audio_feature_extract(file_name=file_name)
-
-    pdb.set_trace()
-    # text_feature_extract(curr_txt)
+    # # get funasr feature
+    funasr_dict = funasr_api(file_name=file_name)
+    # # get audio feature
+    # audio_dict, F, f_names = audio_feature_extract(file_name=file_name)
+    # # audio visualization
+    # audio_visual(F, f_names)
+    # get word feat
+    text_feature_extract(funasr_dict)
