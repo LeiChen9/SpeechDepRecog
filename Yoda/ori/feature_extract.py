@@ -1,5 +1,11 @@
-# from LLMs.pyAudioAnalysis import audioBasicIO
-# from LLMs.pyAudioAnalysis import ShortTermFeatures, audioVisualization
+import sys
+import os
+CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0] 
+config_path = CURRENT_DIR.rsplit('/', 2)[0] # upper 2 level dir
+sys.path.append(config_path)
+
+from LLMs.pyAudioAnalysis import audioBasicIO
+from LLMs.pyAudioAnalysis import ShortTermFeatures, audioVisualization
 import matplotlib.pyplot as plt
 import torch
 # from pyhanlp import *
@@ -21,40 +27,10 @@ def audio_feature_extract(file_name):
     F, f_names = ShortTermFeatures.feature_extraction(x, Fs, 0.050*Fs, 0.025*Fs)
     plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[0]) 
     plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[1]); plt.show()
+    return F, f_names
 
 def audio_visual(file_name):
     pass
-
-def whisper2text(file_name):
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
-    model_id = "Jingmiao/whisper-small-chinese_base"
-
-    model = AutoModelForSpeechSeq2Seq.from_pretrained(
-        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True
-    )
-    model.to(device)
-
-    processor = AutoProcessor.from_pretrained(model_id)
-
-    pipe = pipeline(
-        "automatic-speech-recognition",
-        model=model,
-        tokenizer=processor.tokenizer,
-        feature_extractor=processor.feature_extractor,
-        max_new_tokens=128,
-        torch_dtype=torch_dtype,
-        device=device,
-        output_hidden_state=True
-        # low_cpu_mem_usage=True,
-    )
-
-    sample = file_name
-
-    result = pipe(sample)
-    pdb.set_trace
-    return result
 
 def scope2text(file_name):
     model_id = 'damo/speech_paraformer_asr_nat-zh-cn-16k-common-vocab8358-tensorflow1'
@@ -63,17 +39,6 @@ def scope2text(file_name):
         task=Tasks.auto_speech_recognition,
         model=model_id)
     # embed = get_embedding(model, file_name)
-    rec_result = inference_pipeline(audio_in=file_name)
-    print(rec_result)
-    pdb.set_trace()
-# Let's see how to retrieve time steps for a model
-
-# @deprecated
-def wav2vec(file_name):
-    inference_pipeline = mc_pipeline(
-    task=Tasks.auto_speech_recognition,
-    model='damo/speech_data2vec_pretrain-zh-cn-aishell2-16k-pytorch')
-
     rec_result = inference_pipeline(audio_in=file_name)
     print(rec_result)
     pdb.set_trace()
@@ -89,7 +54,7 @@ def text_feature_extract(text):
 
 def funasr_api(file_name):
     '''
-    Triggered funasr api, which is implemented by Ali-Damo, git repo: https://github.com/alibaba/FunASR.git 
+    Trigger funasr api, work for Speech2Text, implemented by Ali-Damo, git repo: https://github.com/alibaba/FunASR.git 
     Params:
         file_name: absoulte path of audio file to be processed, must in "wav" format
     Return:
@@ -104,22 +69,21 @@ def funasr_api(file_name):
                 - end: end time
                 - text_seg: text segement joined by " "
                 - ts_list: time_stamp list
-            - embeddings: every sentence embedding
+            - embeddings: every sentence embedding, torch tensor with 1 x word_len x 512
     '''
     api = infer(model="paraformer-zh", vad_model="fsmn-vad", punc_model="ct-punc", model_hub="ms")
 
     results = api(file_name, batch_size_token=5000)
-    result = results[0] # type of dict, with key, value, text_postprocessed, time_stamp, sentences, embeddings
-    pdb.set_trace()
+    result = results[0]
+    return result
 
 
 if __name__ == '__main__':
     file_name = "/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/t_1/positive_out.wav"
-    #
-    # audio_feature_extract(file_name)
-    # curr_txt = whisper2text(file_name)
-    # curr_txt = scope2text(file_name)
-    # wav2vec(file_name)
-    res = funasr_api(file_name=file_name)
+    # get funasr feature
+    # funasr_dict = funasr_api(file_name=file_name)
+    # get audio feature
+    F, f_names = audio_feature_extract(file_name=file_name)
+
     pdb.set_trace()
-    text_feature_extract(curr_txt)
+    # text_feature_extract(curr_txt)
