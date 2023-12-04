@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn 
 
 class DepressionClassifier(nn.Module):
-    def __init__(self):
+    def __init__(self, num_targets):
         super().__init__()
         # conv block
         self.conv2Dblock = nn.Sequential(
@@ -56,10 +56,10 @@ class DepressionClassifier(nn.Module):
         transf_layer = nn.TransformerEncoderLayer(d_model=64, nhead=4, dim_feedforward=512, dropout=0.4, activation='relu')
         self.transf_encoder = nn.TransformerEncoder(transf_layer, num_layers=4)
         # Linear softmax layer
-        self.out_linear = nn.Linear(320,num_emotions)
+        self.out_linear = nn.Linear(320,num_targets)
         self.dropout_linear = nn.Dropout(p=0)
         self.out_softmax = nn.Softmax(dim=1)
-        
+
     def forward(self,x):
         # conv embedding
         conv_embedding = self.conv2Dblock(x) #(b,channel,freq,time)
