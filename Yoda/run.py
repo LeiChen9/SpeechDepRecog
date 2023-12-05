@@ -51,51 +51,12 @@ if __name__ == '__main__':
     val_losses = []
     for epoch in range(EPOCHS):
         # schuffle data
-        ind = np.random.permutation(DATASET_SIZE)
-        X_train = X_train[ind,:,:,:]
-        Y_train = Y_train[ind]
         epoch_acc = 0
         epoch_loss = 0
         # iters = int(DATASET_SIZE / BATCH_SIZE)
-        for iter, batch in enumerate(data_loader):
-            # batch_start = i * BATCH_SIZE
-            # batch_end = min(batch_start + BATCH_SIZE, DATASET_SIZE)
-            # actual_batch_size = batch_end-batch_start
-            # X = X_train[batch_start:batch_end,:,:,:]
-            # Y = Y_train[batch_start:batch_end]
+        for batch in data_loader.data_loader:
             assert isinstance(batch, dict), type(batch)
-            batch = batch.to(device)
-            retval = model(**batch)
-            # X_tensor = torch.tensor(X,device=device).float()
-            # Y_tensor = torch.tensor(Y, dtype=torch.long,device=device)
-            if isinstance(retval, dict):
-                loss = retval["loss"]
-                stats = retval["stats"]
-                weight = retval["weight"]
-                optim_idx = retval.get("optim_idx")
-                if optim_idx is not None and not isinstance(optim_idx, int):
-                    if not isinstance(optim_idx, torch.Tensor):
-                        raise RuntimeError(
-                            "optim_idx must be int or 1dim torch.Tensor, "
-                            f"but got {type(optim_idx)}"
-                        )
-                    if optim_idx.dim() >= 2:
-                        raise RuntimeError(
-                            "optim_idx must be int or 1dim torch.Tensor, "
-                            f"but got {optim_idx.dim()}dim tensor"
-                        )
-                    if optim_idx.dim() == 1:
-                        for v in optim_idx:
-                            if v != optim_idx[0]:
-                                raise RuntimeError(
-                                    "optim_idx must be 1dim tensor "
-                                    "having same values for all entries"
-                                )
-                        optim_idx = optim_idx[0].item()
-                    else:
-                        optim_idx = optim_idx.item()
 
-            #   b. tuple or list type
-            else:
-                loss, stats, weight = retval
-                optim_idx = None
+            batch = batch.to(device)
+            output_logits, output_softmax = model(**batch)
+            

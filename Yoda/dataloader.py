@@ -52,20 +52,17 @@ class SDRDataset(Dataset):
                 label = 0
         return key, pos_deep_embed, pos_mel_feat, neg_deep_embed, neg_mel_feat, neutral_deep_embed, neutral_mel_feat, label
 
-class SDRDataLoader():
-    def __init__(self, data_config_file, batch_size, shuffle=True, num_workers=8):
-        dataset = SDRDataset(data_config_file)
-        self.dataset = dataset
-        self.data_loader = DataLoader(dataset,
-                                      batch_size=batch_size,
-                                      collate_fn=custom_collate,
-                                      shuffle=shuffle,
-                                      num_workers=num_workers)
-    
-    def build_iter(self, epoch):
-        return self.data_loader
+def dataloader_gen(dataset, batch_size, shuffle=True, num_workers=8):
+    data_loader = DataLoader(dataset,
+                            batch_size=batch_size,
+                            collate_fn=custom_collate,
+                            shuffle=shuffle,
+                            num_workers=num_workers)
+    return data_loader
 
 if __name__ == '__main__':
     data_config_file = "./configs/data_config.yaml"
-    data_loader = SDRDataLoader(data_config_file=data_config_file, batch_size=4)
-    pdb.set_trace()
+    data_set = SDRDataset(data_config_file)
+    data_loader = dataloader_gen(data_set, 4)
+    for batch in data_loader:
+        pdb.set_trace()
