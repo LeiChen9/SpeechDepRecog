@@ -55,6 +55,7 @@ class SDRDataset(Dataset):
 class SDRDataLoader():
     def __init__(self, data_config_file, batch_size, shuffle=True, num_workers=8):
         dataset = SDRDataset(data_config_file)
+        self.dataset = dataset
         self.data_loader = DataLoader(dataset,
                                       batch_size=batch_size,
                                       collate_fn=custom_collate,
