@@ -70,7 +70,7 @@ class DepressionClassifier(nn.Module):
         # conv embedding
         pos_conv_embedding = self.conv2Dblock(pos_mel_feat) #(b,channel,freq,time)
         neg_conv_embedding = self.conv2Dblock(neg_mel_feat)
-        neutral_conv_embedding = self.conv2Dblock(neg_mel_feat)
+        neutral_conv_embedding = self.conv2Dblock(neutral_mel_feat)
         # conv_embedding = torch.flatten(conv_embedding, start_dim=1) # do not flatten batch dimension
         pos_embed = torch.flatten(pos_conv_embedding, start_dim=1)
         neg_embed = torch.flatten(neg_conv_embedding, start_dim=1)

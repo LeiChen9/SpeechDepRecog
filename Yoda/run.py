@@ -56,23 +56,46 @@ if __name__ == '__main__':
         Y_train = Y_train[ind]
         epoch_acc = 0
         epoch_loss = 0
-        iters = int(DATASET_SIZE / BATCH_SIZE)
-        for i in range(iters):
-            batch_start = i * BATCH_SIZE
-            batch_end = min(batch_start + BATCH_SIZE, DATASET_SIZE)
-            actual_batch_size = batch_end-batch_start
-            X = X_train[batch_start:batch_end,:,:,:]
-            Y = Y_train[batch_start:batch_end]
-            X_tensor = torch.tensor(X,device=device).float()
-            Y_tensor = torch.tensor(Y, dtype=torch.long,device=device)
-            loss, acc = train_step(X_tensor,Y_tensor)
-            epoch_acc += acc*actual_batch_size/DATASET_SIZE
-            epoch_loss += loss*actual_batch_size/DATASET_SIZE
-            print(f"\r Epoch {epoch}: iteration {i}/{iters}",end='')
-        X_val_tensor = torch.tensor(X_val,device=device).float()
-        Y_val_tensor = torch.tensor(Y_val,dtype=torch.long,device=device)
-        val_loss, val_acc, predictions = validate(X_val_tensor,Y_val_tensor)
-        losses.append(epoch_loss)
-        val_losses.append(val_loss)
-        print('')
-        print(f"Epoch {epoch} --> loss:{epoch_loss:.4f}, acc:{epoch_acc:.2f}%, val_loss:{val_loss:.4f}, val_acc:{val_acc:.}")
+        # iters = int(DATASET_SIZE / BATCH_SIZE)
+        for iter, batch in enumerate(data_loader):
+            # batch_start = i * BATCH_SIZE
+            # batch_end = min(batch_start + BATCH_SIZE, DATASET_SIZE)
+            # actual_batch_size = batch_end-batch_start
+            # X = X_train[batch_start:batch_end,:,:,:]
+            # Y = Y_train[batch_start:batch_end]
+            assert isinstance(batch, dict), type(batch)
+            batch = batch.to(device)
+            retval = model(**batch)
+            # X_tensor = torch.tensor(X,device=device).float()
+            # Y_tensor = torch.tensor(Y, dtype=torch.long,device=device)
+            if isinstance(retval, dict):
+                loss = retval["loss"]
+                stats = retval["stats"]
+                weight = retval["weight"]
+                optim_idx = retval.get("optim_idx")
+                if optim_idx is not None and not isinstance(optim_idx, int):
+                    if not isinstance(optim_idx, torch.Tensor):
+                        raise RuntimeError(
+                            "optim_idx must be int or 1dim torch.Tensor, "
+                            f"but got {type(optim_idx)}"
+                        )
+                    if optim_idx.dim() >= 2:
+                        raise RuntimeError(
+                            "optim_idx must be int or 1dim torch.Tensor, "
+                            f"but got {optim_idx.dim()}dim tensor"
+                        )
+                    if optim_idx.dim() == 1:
+                        for v in optim_idx:
+                            if v != optim_idx[0]:
+                                raise RuntimeError(
+                                    "optim_idx must be 1dim tensor "
+                                    "having same values for all entries"
+                                )
+                        optim_idx = optim_idx[0].item()
+                    else:
+                        optim_idx = optim_idx.item()
+
+            #   b. tuple or list type
+            else:
+                loss, stats, weight = retval
+                optim_idx = None
