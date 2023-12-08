@@ -92,23 +92,49 @@ def funasr_api(file_name: str) -> dict:
 
     # pdb.set_trace()
     results = api(file_name, batch_size_token=5000)
-    embed_len = []
+    # embed_len = []
     for idx, sample in enumerate(results):
         results[idx]['deep_embed'] = torch.cat(sample['embeddings'], dim=1).reshape(-1, 512)
-        curr_len = results[idx]['deep_embed'].shape[0]
-        embed_len.append(curr_len)
-    return results, embed_len
+        # curr_len = results[idx]['deep_embed'].shape[0]
+        # embed_len.append(curr_len)
+    return results
 
 def full_feat_extract(file_name):
-    funasr_dict = funasr_api(file_name=file_name)
-    deep_embed = torch.cat(funasr_dict['embeddings'], dim=1).reshape(-1, 512)
+    '''
+    read kaldi-style file and generate list of feature.
+    Params:
+        file_name: kaldi-style wav.scp file. All path in this file should be absolute path
+    Return:
+        list of dict.
+        dict foramt:
+            key: identifier, which is aligned with file_name id
+            mel_feat: extracted mel feat, type of torch, shape of 68 * 70
+            deep_feat: extracted deep embedding by funasr api. type of torch, shape of seq_len * 512,
+                        seq_len not fixed, need further process in collate_fn method in dataloader
+    '''
+    funasr_deep_embed_lst = funasr_api(file_name=file_name)
+
     # get audio feature
-    audio_dict, F, f_names = audio_feature_extract(file_name=file_name)
-    mel_feat = torch.from_numpy(F)
-    return {
-        'deep_embed': deep_embed,
-        'mel_feat': mel_feat
-    }
+    mel_feat_lst = []
+    with open(file_name, 'r') as f:
+        for line in f.readlines():
+            id, file_path = line.split()
+            audio_dict, F, f_names = audio_feature_extract(file_name=file_path)
+            mel_feat = torch.from_numpy(F)
+            mel_feat_lst.append({
+                'key': id,
+                'mel_feat': mel_feat
+            })
+    
+    # concat
+    final_feat_lst = []
+    for feat in mel_feat_lst:
+        final_feat_lst.append({
+            'key': feat['key'],
+            'mel_feat': feat['mel_feat'],
+            'deep_feat': feat['deep_embed']
+        })
+    return final_feat_lst
 
 if __name__ == '__main__':
     # with open("./configs/data_config.yaml", 'r') as f:
