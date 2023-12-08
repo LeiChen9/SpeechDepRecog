@@ -52,17 +52,13 @@ class SDRDataset(Dataset):
                 label = 0
         return key, pos_deep_embed, pos_mel_feat, neg_deep_embed, neg_mel_feat, neutral_deep_embed, neutral_mel_feat, label
 
-def dataloader_gen(dataset, batch_size, shuffle=True, num_workers=8):
-    data_loader = DataLoader(dataset,
-                            batch_size=batch_size,
-                            collate_fn=custom_collate,
-                            shuffle=shuffle,
-                            num_workers=num_workers)
-    return data_loader
-
 if __name__ == '__main__':
     data_config_file = "./configs/data_config.yaml"
     data_set = SDRDataset(data_config_file)
-    data_loader = dataloader_gen(data_set, 4)
+    data_loader = DataLoader(data_set,
+                            batch_size=4,
+                            collate_fn=custom_collate,
+                            shuffle=True,
+                            num_workers=8)
     for batch in data_loader:
         pdb.set_trace()

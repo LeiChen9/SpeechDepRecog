@@ -1,5 +1,6 @@
 import sys
 import os
+import yaml
 CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0] 
 config_path = CURRENT_DIR.rsplit('/', 1)[0] # upper 2 level dir
 sys.path.append(config_path)
@@ -17,6 +18,7 @@ from modelscope.preprocessors import Preprocessor
 from modelscope.utils.constant import Tasks
 from funasr import infer
 import modelscope
+import random
 import pdb
 
 def audio_feature_extract(file_name: str) -> dict:
@@ -88,9 +90,14 @@ def funasr_api(file_name: str) -> dict:
     '''
     api = infer(model="paraformer-zh", vad_model="fsmn-vad", punc_model="ct-punc", model_hub="ms")
 
+    # pdb.set_trace()
     results = api(file_name, batch_size_token=5000)
-    result = results[0]
-    return result
+    embed_len = []
+    for idx, sample in enumerate(results):
+        results[idx]['deep_embed'] = torch.cat(sample['embeddings'], dim=1).reshape(-1, 512)
+        curr_len = results[idx]['deep_embed'].shape[0]
+        embed_len.append(curr_len)
+    return results, embed_len
 
 def full_feat_extract(file_name):
     funasr_dict = funasr_api(file_name=file_name)
@@ -104,15 +111,21 @@ def full_feat_extract(file_name):
     }
 
 if __name__ == '__main__':
-    file_name = "/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/t_1/positive_out.wav"
-    # # get funasr feature
-    funasr_dict = funasr_api(file_name=file_name)
-    embed = torch.cat(funasr_dict['embeddings'], dim=1).reshape(-1, 512)
-    # get audio feature
-    audio_dict, F, f_names = audio_feature_extract(file_name=file_name)
-    mel_feat = torch.from_numpy(F)
-    # # audio visualization
-    # audio_visual(F, f_names)
-    # # get word feat
-    # text_feature_extract(funasr_dict)
+    # with open("./configs/data_config.yaml", 'r') as f:
+    #     data_config = yaml.safe_load(f)
+    # shape_lst = []
+    # file_lst = []
+    # for key, value in data_config.items():
+    #     for k, v in value.items():
+    #         if k in ['neg', 'neutral', 'pos']:
+    #             file_lst.append(v)
+    # random.shuffle(file_lst)
+    # file_lst = file_lst[:50]
+    # for v in file_lst:
+    #     file_name = v
+    #     funasr_dict = funasr_api(file_name=file_name)
+    #     embed = torch.cat(funasr_dict['embeddings'], dim=1).reshape(-1, 512)
+    #     shape_lst.append(embed.shape[0])
+    #     print(shape_lst)
+    funasr_lst, embed_len = funasr_api(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
     pdb.set_trace()
