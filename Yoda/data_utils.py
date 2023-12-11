@@ -155,5 +155,5 @@ if __name__ == '__main__':
     #     shape_lst.append(embed.shape[0])
     #     print(shape_lst)
     # funasr_lst, embed_len = funasr_api(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
-    tmp = full_feat_extract(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
+    tmp = full_feat_extract(file_name='/home/bix/Documents/Riceball/Code/yoda/SpeechM/Yoda/configs/ubuntu_wav.scp')
     pdb.set_trace()

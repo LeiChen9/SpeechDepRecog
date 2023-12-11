@@ -53,7 +53,7 @@ class SDRDataset(Dataset):
         return key, pos_deep_embed, pos_mel_feat, neg_deep_embed, neg_mel_feat, neutral_deep_embed, neutral_mel_feat, label
 
 if __name__ == '__main__':
-    data_config_file = "./configs/data_config.yaml"
+    data_config_file = "./configs/ubuntu_data_config.yaml"
     data_set = SDRDataset(data_config_file)
     data_loader = DataLoader(data_set,
                             batch_size=4,
