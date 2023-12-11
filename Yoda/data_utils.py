@@ -21,11 +21,11 @@ import modelscope
 import random
 import pdb
 
-def audio_feature_extract(file_name: str) -> dict:
+def audio_feature_extract(file_path: str) -> dict:
     '''
     Extract acoustic feature from audio file, implemented by a Greece researcher, git repo: https://github.com/tyiannak/pyAudioAnalysis.git
     Params:
-        file_name: absoulte path of audio file to be processed, must in "wav" format
+        file_path: absoulte path of audio file to be processed, must in "wav" format
     Return:
         type of tuple of (feat_dict, feature matrix, feature names)
         dict:
@@ -34,7 +34,7 @@ def audio_feature_extract(file_name: str) -> dict:
         feeature matrix: 68 * 740
         feature names: list of len 68
     '''
-    [Fs, x] = audioBasicIO.read_audio_file(file_name)
+    [Fs, x] = audioBasicIO.read_audio_file(file_path)
     # convert dual channel to mono
     x = x.mean(axis=1)
     F, f_names = ShortTermFeatures.feature_extraction(x, Fs, 0.050*Fs, 0.025*Fs)
@@ -112,14 +112,15 @@ def full_feat_extract(file_name):
             deep_feat: extracted deep embedding by funasr api. type of torch, shape of seq_len * 512,
                         seq_len not fixed, need further process in collate_fn method in dataloader
     '''
-    funasr_deep_embed_lst = funasr_api(file_name=file_name)
+    # funasr_deep_embed_lst = funasr_api(file_name=file_name)
 
     # get audio feature
     mel_feat_lst = []
     with open(file_name, 'r') as f:
         for line in f.readlines():
             id, file_path = line.split()
-            audio_dict, F, f_names = audio_feature_extract(file_name=file_path)
+            # pdb.set_trace()
+            audio_dict, F, f_names = audio_feature_extract(file_path=file_path)
             mel_feat = torch.from_numpy(F)
             mel_feat_lst.append({
                 'key': id,
@@ -153,5 +154,6 @@ if __name__ == '__main__':
     #     embed = torch.cat(funasr_dict['embeddings'], dim=1).reshape(-1, 512)
     #     shape_lst.append(embed.shape[0])
     #     print(shape_lst)
-    funasr_lst, embed_len = funasr_api(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
+    # funasr_lst, embed_len = funasr_api(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
+    tmp = full_feat_extract(file_name='/Users/lei/Documents/Projs/Yoda/SpeechM/Yoda/configs/wav.scp')
     pdb.set_trace()
