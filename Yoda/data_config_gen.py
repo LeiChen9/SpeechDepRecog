@@ -7,11 +7,17 @@ import pdb
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("--env", type=str, default="mac", help="current machine env, mac or win or ubuntu")
     parser.add_argument("--config_file", type=str, default="./configs/data_config.yaml", help="data_config output")
     parser.add_argument("--scp_file", type=str, default="./configs/wav.scp", help='kaldi-style scp file')
     parser.add_argument("--overwrite", type=bool, default=False, help='config file overwrite')
     parser.add_argument("--source_dir", type=str, default="/Users/lei/Documents/Projs/Yoda/Data/EATD-Corpus/", help="path to source dir")
     args = parser.parse_args()
+    # setup env 
+    if args.env == 'ubuntu':
+        args.config_file = './configs/ubuntu_data_config.yaml'
+        args.scp_file = "./configs/ubuntu_wav.scp"
+        args.source_dir = "/home/bix/Documents/Riceball/Code/yoda/Data/EATD-Corpus"
     # load data
     data_dir = args.source_dir
     data_config = {}
