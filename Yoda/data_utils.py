@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import torch
 # from pyhanlp import *
 import jieba
+import librosa
 from transformers import AutoTokenizer, AutoModelForCTC
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from modelscope.pipelines import pipeline as mc_pipeline
@@ -36,7 +37,8 @@ def audio_feature_extract(file_path: str) -> dict:
     '''
     [Fs, x] = audioBasicIO.read_audio_file(file_path)
     # convert dual channel to mono
-    x = x.mean(axis=1)
+    if len(x.shape) > 1:
+        x = x.mean(axis=1)
     F, f_names = ShortTermFeatures.feature_extraction(x, Fs, 0.050*Fs, 0.025*Fs)
     
     audio_dict = {}
@@ -112,14 +114,14 @@ def full_feat_extract(file_name):
             deep_feat: extracted deep embedding by funasr api. type of torch, shape of seq_len * 512,
                         seq_len not fixed, need further process in collate_fn method in dataloader
     '''
-    # funasr_deep_embed_lst = funasr_api(file_name=file_name)
+    funasr_deep_embed_lst = funasr_api(file_name=file_name)
+    pdb.set_trace()
 
     # get audio feature
     mel_feat_lst = []
     with open(file_name, 'r') as f:
         for line in f.readlines():
             id, file_path = line.split()
-            # pdb.set_trace()
             audio_dict, F, f_names = audio_feature_extract(file_path=file_path)
             mel_feat = torch.from_numpy(F)
             mel_feat_lst.append({
@@ -133,7 +135,7 @@ def full_feat_extract(file_name):
         final_feat_lst.append({
             'key': feat['key'],
             'mel_feat': feat['mel_feat'],
-            'deep_feat': feat['deep_embed']
+            'deep_feat': funasr_deep_embed_lst[key]['deep_embed']
         })
     return final_feat_lst
 

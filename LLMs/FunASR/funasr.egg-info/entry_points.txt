@@ -1,0 +1,3 @@
+[console_scripts]
+funasr = funasr.bin.inference_cli:main
+
