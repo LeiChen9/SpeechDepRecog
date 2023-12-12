@@ -115,7 +115,9 @@ def full_feat_extract(file_name):
                         seq_len not fixed, need further process in collate_fn method in dataloader
     '''
     funasr_deep_embed_lst = funasr_api(file_name=file_name)
-    pdb.set_trace()
+    funasr_deep_dic = {}
+    for elem in funasr_deep_embed_lst:
+        funasr_deep_dic[elem['key']] = elem['deep_embed']
 
     # get audio feature
     mel_feat_lst = []
@@ -135,7 +137,7 @@ def full_feat_extract(file_name):
         final_feat_lst.append({
             'key': feat['key'],
             'mel_feat': feat['mel_feat'],
-            'deep_feat': funasr_deep_embed_lst[key]['deep_embed']
+            'deep_feat': funasr_deep_dic[feat['key']]
         })
     return final_feat_lst
 
